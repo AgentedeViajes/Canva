@@ -53,6 +53,55 @@ sube `node_modules` (el proyecto no tiene dependencias), `.DS_Store` ni logs.
 > repositorio va a ser público y querés uno más liviano, podés excluir esa carpeta o comprimir
 > las capturas; la documentación principal sigue funcionando.
 
+### Si GitHub pide contraseña y no la acepta
+
+GitHub **ya no acepta la contraseña de la cuenta** para operaciones Git. Hay que usar un token
+personal o una clave SSH. La terminal tampoco muestra los caracteres que escribís: es normal.
+
+**Token personal (la opción más rápida):**
+
+1. Abrí <https://github.com/settings/tokens/new>.
+2. Nota: “Lienzo”; expiración: 30 días; marcá el permiso **`repo`**.
+3. Generá el token y copialo (empieza con `ghp_`).
+4. En la terminal:
+
+```bash
+cd /Users/javier/Desktop/CLON
+git config --global credential.helper osxkeychain
+git push -u origin main
+```
+
+Cuando pida **Username**: `AgentedeViajes`.  
+Cuando pida **Password**: pegá el token con `⌘V` y pulsá Enter. No se va a ver nada mientras
+pegás; es lo esperado.
+
+**SSH (alternativa sin tokens):**
+
+```bash
+ssh-keygen -t ed25519 -C "tu@email.com"
+# Enter para aceptar la ruta; passphrase opcional
+pbcopy < ~/.ssh/id_ed25519.pub
+```
+
+Pegá la clave pública en <https://github.com/settings/keys> → **New SSH key**. Luego:
+
+```bash
+ssh -T git@github.com
+cd /Users/javier/Desktop/CLON
+git remote set-url origin git@github.com:AgentedeViajes/Canva.git
+git push -u origin main
+```
+
+**GitHub Desktop (sin terminal):** instalá <https://desktop.github.com>, iniciá sesión con el
+navegador, elegí **File → Add local repository** y seleccioná esta carpeta. GitHub Desktop se
+encarga de la autenticación y del push.
+
+Si ya se guardó una credencial incorrecta, borrala con:
+
+```bash
+printf "protocol=https\nhost=github.com\n\n" | git credential-osxkeychain erase
+```
+
 ## Funciones
 
 - **Selección:** clic, ⇧ clic, marquesina y teclado; objetos bloqueados y ocultos.
