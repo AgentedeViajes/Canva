@@ -1,0 +1,22 @@
+# Sistema
+.DS_Store
+
+# Dependencias (este proyecto no tiene, pero por si acaso)
+node_modules/
+vendor/
+
+# Entornos y secretos
+.env
+.env.*
+*.local
+
+# Logs y temporales
+*.log
+tmp/
+temp/
+dist/
+build/
+
+# Editores
+.vscode/
+.idea/

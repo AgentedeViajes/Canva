@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Lienzo: editor de diseño gráfico local con selección, transformación, capas, tipografía y exportación PNG.">
+  <title>Lienzo — Editor de diseño</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-logo" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" fill="none" stroke="currentColor" stroke-width="1.7" rx="5"/><path d="M8 8h8v8H8z" fill="currentColor" opacity=".9"/></symbol>
+      <symbol id="i-cursor" viewBox="0 0 24 24"><path d="m5 3 14 9-6.2 1.4L10 20 5 3Z" fill="currentColor"/></symbol>
+      <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 5h16M12 5v14M8 19h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-shapes" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="7.5" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m7.5 13 5 8h-10l5-8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M17 13.5 18 16l2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z" fill="currentColor"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m4 12 8 4.5 8-4.5M4 16l8 4.5 8-4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-bg" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><path d="m5 18 5-5 4 4 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7 4 12l5 5M4 12h9.5A5.5 5.5 0 0 1 19 17.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 7 5 5-5 5m5-5h-9.5A5.5 5.5 0 0 0 5 17.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0 4-4m-4 4-4-4M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 7.4-2" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3 21 21M9.5 5.9A10.4 10.4 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.1 7.7A16.8 16.8 0 0 0 2.5 12S6 18.5 12 18.5c1.1 0 2.1-.2 3-.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+      <symbol id="i-align-left" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-align-center" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M8 18h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-align-right" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M12 18h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 4h6.2a4 4 0 0 1 0 8H7V4Zm0 8h7a4 4 0 0 1 0 8H7v-8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-italic" viewBox="0 0 24 24"><path d="M10 4h8M6 20h8M14 4 10 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="i-underline" viewBox="0 0 24 24"><path d="M7 4v7a5 5 0 0 0 10 0V4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="i-strike" viewBox="0 0 24 24"><path d="M7 7.5A4.2 4.2 0 0 1 11.4 4h2A4.1 4.1 0 0 1 18 7.5M5 12h14M8 16.5A4 4 0 0 0 12 20h1a4 4 0 0 0 4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.7M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="m5.5 18 5-5 3.5 3.5 2.5-2.5 3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-square" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/></symbol>
+      <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.9"/></symbol>
+      <symbol id="i-triangle" viewBox="0 0 24 24"><path d="m12 4 9 16H3L12 4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20l1.4-6.3L3 9.5l6.4-.6L12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-line" viewBox="0 0 24 24"><path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15.5 15.5 5 5M10.5 7v7M7 10.5h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15.5 15.5 5 5M7 10.5h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-magnet" viewBox="0 0 24 24"><path d="M5 4v8a7 7 0 0 0 14 0V4h-4v8a3 3 0 0 1-6 0V4H5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 8h4M15 8h4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-front" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="12" height="12" rx="2" fill="currentColor" opacity=".25"/><rect x="8.5" y="8.5" width="12" height="12" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2" fill="currentColor" opacity=".25"/><rect x="3.5" y="3.5" width="12" height="12" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="i-forward" viewBox="0 0 24 24"><path d="M12 4v14m0 0-5-5m5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-backward" viewBox="0 0 24 24"><path d="M12 20V6m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></symbol>
+      <symbol id="i-opacity" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16V4Z" fill="currentColor" opacity=".45"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5V3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 3v6h7V3M8 21v-7h8v7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h5l2 2h8A1.5 1.5 0 0 1 21 8.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-12Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+      <symbol id="i-flip-h" viewBox="0 0 24 24"><path d="M12 3v18M8.5 7 4 12l4.5 5M15.5 7 20 12l-4.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-flip-v" viewBox="0 0 24 24"><path d="M3 12h18M7 8.5 12 4l5 4.5M7 15.5 12 20l5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="brand-btn" id="btn-home" title="Nuevo documento" aria-label="Inicio">
+          <span class="brand-mark"><svg><use href="#i-logo"></use></svg></span>
+          <span class="brand-name">Lienzo</span>
+        </button>
+        <div class="topbar-divider"></div>
+        <div class="menu-anchor">
+          <button class="topbar-btn" id="btn-file" aria-haspopup="menu" aria-expanded="false">Archivo</button>
+          <div class="menu" id="file-menu" role="menu" hidden>
+            <button role="menuitem" data-action="new"><svg><use href="#i-plus"></use></svg>Nuevo diseño</button>
+            <button role="menuitem" data-action="save-json"><svg><use href="#i-save"></use></svg>Guardar proyecto (.json)</button>
+            <button role="menuitem" data-action="open-json"><svg><use href="#i-folder"></use></svg>Abrir proyecto…</button>
+            <div class="menu-sep"></div>
+            <button role="menuitem" data-action="export"><svg><use href="#i-download"></use></svg>Exportar PNG…</button>
+            <button role="menuitem" data-action="reset"><svg><use href="#i-rotate"></use></svg>Reiniciar diseño</button>
+          </div>
+        </div>
+        <button class="topbar-btn" id="btn-resize">Redimensionar</button>
+        <button class="topbar-btn" id="btn-export-top">Exportar</button>
+      </div>
+
+      <div class="topbar-center">
+        <span class="doc-icon"><svg><use href="#i-logo"></use></svg></span>
+        <input id="doc-title" class="doc-title" value="Sin título" maxlength="80" aria-label="Nombre del diseño" spellcheck="false">
+        <span class="save-status" id="save-status"><span class="status-dot"></span>Guardado</span>
+      </div>
+
+      <div class="topbar-right">
+        <button class="topbar-icon" id="btn-undo" title="Deshacer (⌘Z)" aria-label="Deshacer" disabled><svg><use href="#i-undo"></use></svg></button>
+        <button class="topbar-icon" id="btn-redo" title="Rehacer (⇧⌘Z)" aria-label="Rehacer" disabled><svg><use href="#i-redo"></use></svg></button>
+        <button class="btn btn-ghost" id="btn-present" title="Ver a pantalla completa">Presentar</button>
+        <button class="btn btn-primary" id="btn-export">Exportar PNG<svg><use href="#i-download"></use></svg></button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <nav class="rail" aria-label="Herramientas">
+        <button class="rail-btn" data-panel="templates" title="Plantillas"><svg><use href="#i-grid"></use></svg><span>Plantillas</span></button>
+        <button class="rail-btn" data-panel="elements" title="Elementos"><svg><use href="#i-shapes"></use></svg><span>Elementos</span></button>
+        <button class="rail-btn" data-panel="text" title="Texto"><svg><use href="#i-text"></use></svg><span>Texto</span></button>
+        <button class="rail-btn" data-panel="uploads" title="Subidos"><svg><use href="#i-upload"></use></svg><span>Subidos</span></button>
+        <button class="rail-btn" data-panel="layers" title="Capas"><svg><use href="#i-layers"></use></svg><span>Capas</span></button>
+        <button class="rail-btn" data-panel="background" title="Fondo"><svg><use href="#i-bg"></use></svg><span>Fondo</span></button>
+        <div class="rail-spacer"></div>
+        <button class="rail-btn" id="btn-help" title="Atajos de teclado"><span class="rail-q">?</span><span>Ayuda</span></button>
+      </nav>
+
+      <aside class="side-panel" id="side-panel" aria-label="Panel lateral">
+        <div class="panel-head">
+          <h2 id="panel-title">Elementos</h2>
+          <button class="icon-btn" id="panel-close" aria-label="Cerrar panel"><svg><use href="#i-close"></use></svg></button>
+        </div>
+        <div class="panel-scroll" id="panel-content"></div>
+      </aside>
+
+      <main class="workspace" id="workspace">
+        <div class="canvas-scroll" id="canvas-scroll">
+          <div class="stage-wrap" id="stage-wrap">
+            <div class="stage" id="stage">
+              <canvas id="scene" aria-label="Lienzo de diseño"></canvas>
+              <div class="overlay" id="overlay">
+                <div id="guides-layer"></div>
+                <div id="selection-layer"></div>
+                <div id="marquee" class="marquee" hidden></div>
+              </div>
+              <textarea id="text-editor" class="text-editor" hidden spellcheck="false" aria-label="Editar texto"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace-bottom">
+          <div class="bottom-left">
+            <button class="chip" id="btn-snap" aria-pressed="true" title="Ajuste magnético"><svg><use href="#i-magnet"></use></svg>Imán</button>
+            <span class="dims" id="page-dims">1080 × 1080 px</span>
+          </div>
+          <div class="zoom-controls">
+            <button class="icon-btn" id="btn-zoom-out" aria-label="Alejar"><svg><use href="#i-zoom-out"></use></svg></button>
+            <button class="zoom-value" id="zoom-value" title="Restablecer zoom">100%</button>
+            <button class="icon-btn" id="btn-zoom-in" aria-label="Acercar"><svg><use href="#i-zoom-in"></use></svg></button>
+            <button class="icon-btn" id="btn-fit" aria-label="Ajustar a pantalla" title="Ajustar a pantalla"><svg><use href="#i-fit"></use></svg></button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="inspector" id="inspector" aria-label="Propiedades">
+        <div class="inspector-tabs" role="tablist">
+          <button class="inspector-tab active" data-tab="design" role="tab" aria-selected="true">Diseño</button>
+          <button class="inspector-tab" data-tab="position" role="tab" aria-selected="false">Posición</button>
+        </div>
+        <div class="inspector-scroll" id="inspector-content"></div>
+      </aside>
+    </div>
+  </div>
+
+  <dialog class="dialog" id="export-dialog">
+    <form method="dialog" class="dialog-card" id="export-form">
+      <div class="dialog-head">
+        <div>
+          <h2>Exportar a PNG</h2>
+          <p>Descarga tu diseño con la máxima calidad.</p>
+        </div>
+        <button class="icon-btn" value="cancel" aria-label="Cerrar"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <div class="export-preview-wrap">
+        <div class="export-preview" id="export-preview"><canvas id="export-preview-canvas"></canvas></div>
+        <div class="export-meta" id="export-meta"></div>
+      </div>
+      <label class="field">
+        <span>Nombre del archivo</span>
+        <input type="text" id="export-name" value="lienzo-diseno">
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Calidad</span>
+          <select id="export-scale">
+            <option value="1">1× — 1080 px</option>
+            <option value="2" selected>2× — 2160 px</option>
+            <option value="3">3× — 3240 px</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Fondo</span>
+          <select id="export-background">
+            <option value="solid" selected>Fondo del diseño</option>
+            <option value="transparent">Transparente</option>
+          </select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" value="cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-download" value="default"><svg><use href="#i-download"></use></svg>Descargar PNG</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog" id="resize-dialog">
+    <form method="dialog" class="dialog-card" id="resize-form">
+      <div class="dialog-head">
+        <div>
+          <h2>Redimensionar diseño</h2>
+          <p>Elige un formato o introduce medidas personalizadas.</p>
+        </div>
+        <button class="icon-btn" value="cancel" aria-label="Cerrar"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <div class="preset-grid" id="resize-presets"></div>
+      <div class="field-row">
+        <label class="field"><span>Ancho (px)</span><input type="number" id="resize-width" min="100" max="8000" step="1"></label>
+        <label class="field"><span>Alto (px)</span><input type="number" id="resize-height" min="100" max="8000" step="1"></label>
+      </div>
+      <label class="check-row"><input type="checkbox" id="resize-scale-content" checked><span>Escalar los elementos proporcionalmente</span></label>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" value="cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-apply-resize" value="default">Aplicar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog" id="help-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head">
+        <div><h2>Atajos y consejos</h2><p>Todo se guarda automáticamente en tu navegador.</p></div>
+        <button class="icon-btn" value="cancel" aria-label="Cerrar"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <div class="shortcut-grid">
+        <div><kbd>⌘ Z</kbd><span>Deshacer</span></div>
+        <div><kbd>⇧ ⌘ Z</kbd><span>Rehacer</span></div>
+        <div><kbd>⌘ D</kbd><span>Duplicar</span></div>
+        <div><kbd>⌘ A</kbd><span>Seleccionar todo</span></div>
+        <div><kbd>⌫</kbd><span>Eliminar</span></div>
+        <div><kbd>⇧ clic</kbd><span>Selección múltiple</span></div>
+        <div><kbd>doble clic</kbd><span>Editar texto</span></div>
+        <div><kbd>espacio + arrastrar</kbd><span>Mover el lienzo</span></div>
+        <div><kbd>⌘ + rueda</kbd><span>Zoom</span></div>
+        <div><kbd>flechas</kbd><span>Mover 1 px</span></div>
+        <div><kbd>⇧ flechas</kbd><span>Mover 10 px</span></div>
+        <div><kbd>⌘ ] / ⌘ [</kbd><span>Traer al frente / enviar atrás</span></div>
+      </div>
+      <div class="dialog-actions"><button class="btn btn-primary" value="cancel">Entendido</button></div>
+    </form>
+  </dialog>
+
+  <input type="file" id="file-input" accept="image/*" hidden>
+  <input type="file" id="json-input" accept="application/json,.json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
