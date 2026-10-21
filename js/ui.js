@@ -14,6 +14,7 @@ const PANEL_TITLES = {
   text: 'Texto',
   uploads: 'Subidos',
   layers: 'Capas',
+  tools: 'Herramientas',
   background: 'Fondo',
 };
 
@@ -24,6 +25,7 @@ export class UI {
     this.activePanel = 'elements';
     this.inspectorTab = 'design';
     this.aspectLocked = false;
+    this.templateFilter = 'Todos';
     this.uploads = [];
     this.templateThumbs = new Map();
     this.layerDragId = null;
@@ -141,15 +143,24 @@ export class UI {
     else if (this.activePanel === 'elements') this.renderElements();
     else if (this.activePanel === 'text') this.renderText();
     else if (this.activePanel === 'uploads') this.renderUploads();
+    else if (this.activePanel === 'tools') this.renderTools();
     else if (this.activePanel === 'layers') this.renderLayers();
     else if (this.activePanel === 'background') this.renderBackground();
   }
 
   renderTemplates() {
-    const templates = getTemplates();
+    const all = getTemplates();
+    const categories = ['Todos', ...new Set(all.map((template) => template.category).filter(Boolean))];
+    if (!categories.includes(this.templateFilter)) this.templateFilter = 'Todos';
+    const templates = this.templateFilter === 'Todos'
+      ? all
+      : all.filter((template) => template.category === this.templateFilter);
     this.panel.innerHTML = `
       <div class="panel-section">
         <div class="section-label"><span>Empieza con una base</span><span class="link-btn" data-action="open-help">Consejos</span></div>
+        <div class="filter-chips">
+          ${categories.map((category) => `<button class="filter-chip ${this.templateFilter === category ? 'active' : ''}" data-action="filter-templates" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('')}
+        </div>
         <div class="template-grid">
           ${templates.map((template) => `
             <button class="template-card" data-action="apply-template" data-id="${template.id}" title="Usar plantilla ${escapeHtml(template.name)}">
@@ -249,6 +260,82 @@ export class UI {
       <div class="panel-section">
         <div class="section-label"><span>Consejo</span></div>
         <p style="margin:0;color:var(--muted);font-size:11.5px;line-height:1.55">Haz doble clic sobre un texto del lienzo para editarlo en el sitio. Cambia tipografía, color y espaciado desde el panel <strong>Diseño</strong>.</p>
+      </div>
+    `;
+  }
+
+  renderTools() {
+    const selected = this.store.selectedElements;
+    const image = selected.find((el) => el.type === 'image') || null;
+    const imageCard = image ? `
+      <div class="image-selected-card">
+        <img src="${image.src}" alt="">
+        <div style="min-width:0">
+          <strong>${escapeHtml(image.name || 'Imagen')}</strong>
+          <span>${image.isPlaceholder ? 'Foto de collage sin rellenar' : `${image.naturalWidth || '?'} × ${image.naturalHeight || '?'} px`}</span>
+        </div>
+      </div>
+    ` : '';
+    this.panel.innerHTML = `
+      <div class="panel-section">
+        <div class="tool-section-title">Imagen</div>
+        ${imageCard}
+        <div class="tool-list">
+          <button class="tool-item" data-action="image-bg-remove" ${image ? '' : 'disabled'}>
+            <span class="tool-item-icon">${icon('magic')}</span>
+            <span class="tool-item-text"><strong>Quitar fondo</strong><span>Recorte automático por bordes y PNG transparente.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+          <button class="tool-item" data-action="image-magic-eraser" ${image ? '' : 'disabled'}>
+            <span class="tool-item-icon orange">${icon('crop')}</span>
+            <span class="tool-item-text"><strong>Borrador mágico</strong><span>Pintá una zona y rellenala con su entorno.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+          <button class="tool-item" data-action="image-crop" ${image ? '' : 'disabled'}>
+            <span class="tool-item-icon green">${icon('crop')}</span>
+            <span class="tool-item-text"><strong>Recortar</strong><span>Ajustá el encuadre de una imagen.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+        </div>
+        ${image ? '' : '<p class="tool-hint">Seleccioná una imagen en el lienzo o en Capas para habilitar estas herramientas.</p>'}
+      </div>
+      <div class="panel-section">
+        <div class="tool-section-title">Captura y documentos</div>
+        <div class="tool-list">
+          <button class="tool-item" data-action="capture-screen">
+            <span class="tool-item-icon">${icon('capture')}</span>
+            <span class="tool-item-text"><strong>Captura mágica</strong><span>Capturá una ventana o pantalla y agregala.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+          <button class="tool-item" data-action="import-pdf">
+            <span class="tool-item-icon orange">${icon('pdf')}</span>
+            <span class="tool-item-text"><strong>Importar PDF</strong><span>Convertí la primera página en una imagen editable.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+          <button class="tool-item" data-action="export-pdf">
+            <span class="tool-item-icon green">${icon('download')}</span>
+            <span class="tool-item-text"><strong>Exportar PDF</strong><span>Descargá el diseño actual como documento PDF.</span></span>
+            <span class="tool-arrow">${icon('chevron')}</span>
+          </button>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="tool-section-title">Collage de fotos</div>
+        <div class="collage-choice-grid">
+          <button class="collage-choice" data-action="create-collage" data-rows="1" data-cols="2"><span class="collage-preview-grid" style="grid-template-columns:1fr 1fr"><i></i><i></i></span>2 fotos</button>
+          <button class="collage-choice" data-action="create-collage" data-rows="2" data-cols="2"><span class="collage-preview-grid" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr"><i></i><i></i><i></i><i></i></span>4 fotos</button>
+          <button class="collage-choice" data-action="create-collage" data-rows="3" data-cols="3"><span class="collage-preview-grid" style="grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>9 fotos</button>
+        </div>
+        <button class="btn btn-soft btn-block btn-sm" data-action="fill-collage" style="margin-top:10px">${icon('upload')}Rellenar collage con fotos</button>
+        <p class="tool-hint">Creá una cuadrícula y después reemplazá cada foto. También podés usar la plantilla Collage.</p>
+      </div>
+      <div class="panel-section">
+        <div class="tool-section-title">Documentos y correo</div>
+        <div class="tool-list">
+          <button class="tool-item" data-action="apply-template" data-id="resume"><span class="tool-item-icon">${icon('text')}</span><span class="tool-item-text"><strong>Currículum</strong><span>Plantilla A4 editable.</span></span><span class="tool-arrow">${icon('chevron')}</span></button>
+          <button class="tool-item" data-action="apply-template" data-id="document"><span class="tool-item-icon">${icon('pdf')}</span><span class="tool-item-text"><strong>Documento</strong><span>Informe visual de una página.</span></span><span class="tool-arrow">${icon('chevron')}</span></button>
+          <button class="tool-item" data-action="apply-template" data-id="email"><span class="tool-item-icon">${icon('mail')}</span><span class="tool-item-text"><strong>Correo</strong><span>Newsletter vertical para exportar.</span></span><span class="tool-arrow">${icon('chevron')}</span></button>
+        </div>
       </div>
     `;
   }
@@ -558,6 +645,12 @@ export class UI {
           <button class="btn btn-soft btn-sm" data-action="flip-x">${icon('flip-h')}Voltear H</button>
           <button class="btn btn-soft btn-sm" data-action="flip-y">${icon('flip-v')}Voltear V</button>
         </div>
+        <div class="image-tools-row">
+          <button class="btn btn-soft btn-sm" data-action="image-bg-remove">${icon('magic')}Quitar fondo</button>
+          <button class="btn btn-soft btn-sm" data-action="image-magic-eraser">${icon('crop')}Borrador</button>
+          <button class="btn btn-soft btn-sm" data-action="image-crop">${icon('crop')}Recortar</button>
+        </div>
+        ${el.isPlaceholder ? `<button class="btn btn-dark btn-block btn-sm" data-action="fill-collage" style="margin-top:8px">${icon('upload')}Rellenar esta foto</button>` : ''}
       </div>
     `;
   }
@@ -699,6 +792,34 @@ export class UI {
         break;
       case 'pick-upload':
         this.callbacks.pickImage?.();
+        break;
+      case 'image-bg-remove':
+        this.callbacks.openImageTool?.('background');
+        break;
+      case 'image-magic-eraser':
+        this.callbacks.openImageTool?.('eraser');
+        break;
+      case 'image-crop':
+        this.callbacks.openImageTool?.('crop');
+        break;
+      case 'capture-screen':
+        this.callbacks.openCapture?.();
+        break;
+      case 'import-pdf':
+        this.callbacks.importPdf?.();
+        break;
+      case 'export-pdf':
+        this.callbacks.exportPdf?.();
+        break;
+      case 'create-collage':
+        this.callbacks.createCollage?.(Number(el.dataset.rows), Number(el.dataset.cols));
+        break;
+      case 'fill-collage':
+        this.callbacks.fillCollage?.();
+        break;
+      case 'filter-templates':
+        this.templateFilter = el.dataset.category || 'Todos';
+        this.renderPanel(true);
         break;
       case 'use-upload':
         this.callbacks.useUpload?.(el.dataset.src, el.dataset.name);

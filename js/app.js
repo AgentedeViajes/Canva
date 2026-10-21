@@ -3,7 +3,7 @@ import {
   loadImage, readFileAsDataURL, sanitizeFilename, uid,
 } from './util.js';
 import {
-  emptyDoc, imageElementFromFile, newTextPreset, shapePreset, starterDoc,
+  emptyDoc, imageElementFromFile, makeElement, newTextPreset, shapePreset, starterDoc,
 } from './model.js';
 import {
   ensureImages, layoutText, renderPreview, renderToCanvas, setImageListener,
@@ -12,6 +12,9 @@ import { Store } from './store.js';
 import { UI } from './ui.js';
 import { CanvasInteractions } from './interactions.js';
 import { getTemplates } from './templates.js';
+import { createCollageDoc, collageSlots } from './collage.js';
+import { exportDocToPdf, importPdfFirstPage } from './pdf-tools.js';
+import { ToolsUI } from './tools-ui.js';
 
 /* ============================================================
    Boot
@@ -23,6 +26,7 @@ store.loadSaved();
 const view = { zoom: 1, onZoomDelta: null };
 let clipboard = [];
 let pendingReplaceId = null;
+let pendingCollageFill = false;
 let presenting = false;
 let uiScheduled = false;
 let sceneScheduled = false;
@@ -45,7 +49,9 @@ const undoBtn = document.getElementById('btn-undo');
 const redoBtn = document.getElementById('btn-redo');
 const snapBtn = document.getElementById('btn-snap');
 const fileInput = document.getElementById('file-input');
+const pdfInput = document.getElementById('pdf-input');
 const jsonInput = document.getElementById('json-input');
+const toolDialog = document.getElementById('tool-dialog');
 const exportDialog = document.getElementById('export-dialog');
 const resizeDialog = document.getElementById('resize-dialog');
 const helpDialog = document.getElementById('help-dialog');
@@ -181,6 +187,12 @@ const ui = new UI({
     fitSelection: () => fitToScreen(),
     onDocumentReplaced: () => { fitToScreen(); ui.renderPanel(true); ui.renderInspector(true); updateChrome(); },
     onPageResized: () => { fitToScreen(); ui.renderPanel(true); ui.renderInspector(true); updateChrome(); },
+    openImageTool: (type) => toolsUI.open(type, store.selectedElements.find((el) => el.type === 'image')),
+    openCapture: () => toolsUI.open('capture'),
+    importPdf: () => pdfInput.click(),
+    exportPdf: () => exportPdfNow(),
+    createCollage: (rows, cols) => createCollage(rows, cols),
+    fillCollage: () => fillCollage(),
     onDocumentRenamed: (name) => {
       if (document.activeElement !== docTitleInput) docTitleInput.value = name;
       document.title = `${name} — Lienzo`;
@@ -206,6 +218,26 @@ const interactions = new CanvasInteractions({
   onPositionTab: () => {
     const tab = document.querySelector('.inspector-tab[data-tab="position"]');
     if (tab) tab.click();
+  },
+});
+
+const toolsUI = new ToolsUI({
+  store,
+  dialog: toolDialog,
+  toast: showToast,
+  requestRender: scheduleScene,
+  onAddImage: (image) => {
+    const el = imageElementFromFile({
+      src: image.src,
+      naturalWidth: image.width,
+      naturalHeight: image.height,
+      name: image.name || 'Captura de pantalla',
+      doc: store.doc,
+    });
+    el.name = image.name || 'Captura de pantalla';
+    el.isPlaceholder = false;
+    store.addElement(el);
+    scheduleScene();
   },
 });
 
@@ -285,6 +317,9 @@ fileMenu.addEventListener('click', (event) => {
   if (action === 'new') newDocument();
   if (action === 'reset') resetDesign();
   if (action === 'export') openExportDialog();
+  if (action === 'export-pdf') exportPdfNow();
+  if (action === 'import-pdf') pdfInput.click();
+  if (action === 'capture') toolsUI.open('capture');
   if (action === 'save-json') saveProject();
   if (action === 'open-json') jsonInput.click();
 });
@@ -300,6 +335,7 @@ document.getElementById('btn-present').addEventListener('click', enterPresentMod
    File input / upload
    ============================================================ */
 function pickImage(options = {}) {
+  pendingCollageFill = false;
   pendingReplaceId = options.replaceId || null;
   fileInput.value = '';
   fileInput.click();
@@ -308,7 +344,10 @@ function pickImage(options = {}) {
 fileInput.addEventListener('change', async () => {
   const files = [...(fileInput.files || [])];
   if (!files.length) return;
-  if (pendingReplaceId) {
+  if (pendingCollageFill) {
+    pendingCollageFill = false;
+    await fillCollageWithFiles(files);
+  } else if (pendingReplaceId) {
     const id = pendingReplaceId;
     pendingReplaceId = null;
     const file = files[0];
@@ -318,6 +357,14 @@ fileInput.addEventListener('change', async () => {
   }
   fileInput.value = '';
 });
+
+pdfInput.addEventListener('change', async () => {
+  const file = pdfInput.files?.[0];
+  if (!file) return;
+  pdfInput.value = '';
+  await importPdfFile(file);
+});
+
 
 async function loadImageMeta(file) {
   const src = await readFileAsDataURL(file);
@@ -373,6 +420,7 @@ async function replaceImageWithFile(id, file) {
       el.name = meta.name;
       el.naturalWidth = meta.naturalWidth;
       el.naturalHeight = meta.naturalHeight;
+      el.isPlaceholder = false;
     }, { label: 'Reemplazar imagen' });
     ui.addUpload(meta);
     showToast('Imagen reemplazada.');
@@ -390,6 +438,20 @@ function useUpload(src, name) {
     naturalWidth: known?.naturalWidth || 0,
     naturalHeight: known?.naturalHeight || 0,
   };
+  const selectedPlaceholder = store.selectedElements.find((el) => el.type === 'image' && el.isPlaceholder);
+  if (selectedPlaceholder) {
+    store.apply((doc) => {
+      const target = doc.elements.find((item) => item.id === selectedPlaceholder.id);
+      if (!target) return;
+      target.src = meta.src;
+      target.name = meta.name;
+      target.naturalWidth = meta.naturalWidth;
+      target.naturalHeight = meta.naturalHeight;
+      target.isPlaceholder = false;
+    }, { label: 'Rellenar foto' });
+    showToast('Foto de collage rellenada.');
+    return;
+  }
   const el = imageElementFromFile({ ...meta, doc: store.doc });
   store.addElement(el);
   ui.renderPanel();
@@ -418,6 +480,135 @@ window.addEventListener('drop', async (event) => {
   document.body.classList.remove('file-drag');
   await uploadFiles(event.dataTransfer.files);
 });
+
+/* ============================================================
+   Collage, PDF and image tools
+   ============================================================ */
+function fillCollage() {
+  const slots = collageSlots(store.doc);
+  if (!slots.length) {
+    showToast('No hay fotos de collage para rellenar. Creá una cuadrícula primero.', 3000, 'error');
+    return;
+  }
+  const selected = store.selectedElements.find((el) => el.type === 'image' && el.isPlaceholder);
+  if (selected) {
+    const index = slots.findIndex((slot) => slot.id === selected.id);
+    if (index >= 0) {
+      pendingReplaceId = selected.id;
+      fileInput.value = '';
+      fileInput.click();
+      return;
+    }
+  }
+  pendingCollageFill = true;
+  fileInput.value = '';
+  fileInput.click();
+}
+
+async function fillCollageWithFiles(files) {
+  const images = [...files].filter((file) => file.type.startsWith('image/')).slice(0, 30);
+  if (!images.length) {
+    showToast('Seleccioná imágenes para rellenar el collage.', 2600, 'error');
+    return;
+  }
+  try {
+    const metas = [];
+    for (const file of images) metas.push(await loadImageMeta(file));
+    const slots = collageSlots(store.doc);
+    if (!slots.length) {
+      await uploadFiles(images);
+      return;
+    }
+    const filledIds = [];
+    store.apply((doc) => {
+      const currentSlots = collageSlots(doc);
+      metas.forEach((meta, index) => {
+        const slot = currentSlots[index];
+        if (!slot) return;
+        const target = doc.elements.find((el) => el.id === slot.id);
+        if (!target) return;
+        target.src = meta.src;
+        target.name = meta.name;
+        target.naturalWidth = meta.naturalWidth;
+        target.naturalHeight = meta.naturalHeight;
+        target.isPlaceholder = false;
+        target.fit = 'cover';
+        filledIds.push(target.id);
+        ui.addUpload(meta);
+      });
+    }, { label: 'Rellenar collage' });
+    store.select(filledIds);
+    ui.renderPanel();
+    showToast(`${filledIds.length} foto${filledIds.length === 1 ? '' : 's'} colocada${filledIds.length === 1 ? '' : 's'} en el collage.`);
+  } catch (error) {
+    console.error(error);
+    showToast('No se pudieron procesar las fotos del collage.', 3200, 'error');
+  }
+}
+
+function createCollage(rows = 2, cols = 2) {
+  const doc = createCollageDoc(rows, cols);
+  store.replaceDoc(doc);
+  docTitleInput.value = doc.name;
+  fitToScreen();
+  ui.renderPanel(true);
+  ui.renderInspector(true);
+  showToast(`Collage ${rows}×${cols} creado. Usá “Rellenar collage” para agregar tus fotos.`);
+}
+
+async function importPdfFile(file) {
+  showToast('Importando PDF… puede tardar unos segundos.', 2600);
+  try {
+    const result = await importPdfFirstPage(file, { scale: 2 });
+    const id = uid('image');
+    store.apply((doc) => {
+      const wasEmpty = doc.elements.length === 0;
+      if (wasEmpty) {
+        doc.width = Math.round(result.pageWidth);
+        doc.height = Math.round(result.pageHeight);
+        doc.background = '#ffffff';
+      }
+      const image = makeElement('image', {
+        id,
+        name: `PDF · ${file.name.replace(/\.[^.]+$/, '')}`,
+        x: wasEmpty ? 0 : Math.round(doc.width * 0.08),
+        y: wasEmpty ? 0 : Math.round(doc.height * 0.08),
+        w: wasEmpty ? doc.width : Math.round(doc.width * 0.84),
+        h: wasEmpty ? doc.height : Math.round(doc.height * 0.84),
+        src: result.src,
+        naturalWidth: result.width,
+        naturalHeight: result.height,
+        fit: wasEmpty ? 'cover' : 'contain',
+        radius: 0,
+      });
+      doc.elements.push(image);
+    }, { label: 'Importar PDF' });
+    store.select([id]);
+    fitToScreen();
+    ui.renderPanel(true);
+    ui.renderInspector(true);
+    showToast(`PDF importado: página 1 de ${result.numPages}.`);
+  } catch (error) {
+    console.error(error);
+    showToast(`No se pudo importar el PDF: ${error.message || 'archivo inválido'}`, 4200, 'error');
+  }
+}
+
+async function exportPdfNow() {
+  try {
+    showToast('Generando PDF…', 1800);
+    await exportDocToPdf(store.doc, {
+      scale: 2,
+      filename: store.doc.name || 'lienzo',
+      download: true,
+    });
+    showToast('PDF exportado.');
+    store.flushSave();
+  } catch (error) {
+    console.error(error);
+    showToast('No se pudo exportar el PDF.', 3200, 'error');
+  }
+}
 
 /* ============================================================
    Document actions
@@ -779,6 +970,11 @@ window.__lienzo = {
   renderScene,
   uploadFiles,
   useUpload,
+  exportPdfNow,
+  importPdfFile,
+  createCollage,
+  fillCollage,
+  toolsUI,
   exportDataURL,
   exportPNG,
   addText: (kind = 'heading') => store.addElement(newTextPreset(kind, store.doc)),

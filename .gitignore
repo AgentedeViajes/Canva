@@ -3,7 +3,7 @@
 
 # Dependencias (este proyecto no tiene, pero por si acaso)
 node_modules/
-vendor/
+/vendor/
 
 # Entornos y secretos
 .env
@@ -20,3 +20,6 @@ build/
 # Editores
 .vscode/
 .idea/
+
+# Build de Vercel
+dist/

@@ -44,7 +44,14 @@ También se puede servir con cualquier servidor estático que respete los módul
 | `js/interactions.js` | Puntero: selección, marquesina, mover, redimensionar, rotar, guías, edición de texto en el sitio y barra flotante. |
 | `js/snapping.js` | Objetivos de alineación de página y elementos, cálculo del ajuste y guías. |
 | `js/ui.js` | Paneles de plantillas, elementos, texto, subidos, capas y fondo; inspector de diseño y posición. |
-| `js/templates.js` | Cuatro plantillas originales: Editorial, Minimal, Manifiesto y Social. |
+| `js/templates.js` | 13 plantillas originales por categoría (Redes, Marketing, Documentos). |
+| `js/image-tools.js` | Quitar fondo, difusión para borrador mágico, recorte, placeholders y captura de pantalla. |
+| `js/tools-ui.js` | Diálogos de quitar fondo, borrador mágico, recorte y captura. |
+| `js/pdf-tools.js` | Importación de PDF con PDF.js y exportación PDF 1.4 propia. |
+| `js/collage.js` | Cuadrículas de 2, 4 y 9 fotos con ranuras rellenables. |
+| `js/vendor/pdfjs/` | PDF.js 4.10.38 (Apache 2.0) y su worker. |
+| `build.mjs` | Copia la app estática a `dist` para Vercel. |
+| `vercel.json` | Build y Output Directory de Vercel. |
 | `js/util.js` | Utilidades, fuentes, paletas, presets de página, descargas y saneamiento. |
 | `server.mjs` | Servidor estático concurrente para desarrollo local. |
 | `docs/` | Investigación REA, esta documentación, guía de uso y evidencias. |
@@ -238,7 +245,15 @@ proporción opcional.
 
 ### 5.13 Otros
 
-- 4 plantillas originales con miniaturas renderizadas.
+- 13 plantillas originales con miniaturas renderizadas y filtros por categoría.
+- Quitar fondo con detección por bordes, tolerancia, suavizado y PNG transparente.
+- Borrador mágico con máscara de pincel y relleno por difusión.
+- Recorte interactivo de imágenes.
+- Captura de ventana/pantalla con `getDisplayMedia`.
+- Importación de la primera página de un PDF y exportación a PDF.
+- Collage de 2, 4 o 9 fotos con reemplazo en lote.
+- Presets para Instagram, historia, flyer, logo, collage, tarjeta, folleto, correo, currículum,
+  documento, presentación y A4.
 - Cambio de página: Publicación, Presentación, Historia, Retrato, Portada, A4 y medidas
   personalizadas; opción de escalar contenido.
 - Modo presentación a pantalla completa con salida por Esc.
@@ -250,7 +265,7 @@ proporción opcional.
 | Requisito del usuario | Implementación | Verificación |
 |---|---|---|
 | Investigar con REA | `docs/INVESTIGACION-REA.md` + evidencias | Sesión CDP/REA sobre Canva pública. |
-| Construir y clonar la aplicación | Editor completo en `index.html`, `styles.css`, `js/` | App carga en Chrome 154 sin errores de consola. |
+| Construir y clonar la aplicación | Editor completo en `index.html`, `styles.css`, `js/` | App carga en Chrome 155 sin errores de consola. |
 | Arrastrar elementos | `CanvasInteractions.beginMove/doMove` | x 72 → 236; Undo → 72. |
 | Cambiar colores | Inspector de color, paletas, fondo | Relleno `#ef4444` aplicado y exportado. |
 | Cambiar tipografías | Selector de 16 fuentes, tamaño, peso, estilos | Georgia + tamaño 96/128 aplicados. |
@@ -258,14 +273,20 @@ proporción opcional.
 | Exportar a PNG | `exportPNG` + diálogo | PNG 2160×2160, 655 111 bytes. |
 | Editar imágenes y recursos propios | Subida, reemplazo, lista de recursos | SVG 400×300 subido como elemento 605×454. |
 | Organización de elementos | Capas, orden Z, alineación, distribución | Panel de capas con 11 filas; alineación múltiple. |
+| Quitar fondo | `removeBackground` + diálogo | 56 % transparente; PNG aplicado y undo. |
+| Borrador mágico | `inpaintFromMask` + máscara | 24 135 px de máscara; relleno aplicado. |
+| Captura mágica | `captureScreenFrame` + diálogo | UI de selección de ventana; requiere permiso del navegador. |
+| Editar PDF/documentos | `importPdfFirstPage` + `exportDocToPdf` | Página 1 importada; PDF de 211 617 bytes válido. |
+| Collage de fotos | `createCollageDoc` + ranuras | 4 fotos; 2 reemplazadas en lote. |
+| Plantillas sociales, logos, folletos, CV, tarjetas, correo | `templates.js` | 13 plantillas, 4 categorías. |
 
 ## 7. Verificación realizada
 
-Entorno: Chrome 154.0.8037.98, macOS, servidor local `node server.mjs`.
+Entorno: Chrome 155.0.8059.85, macOS, servidor local `node server.mjs`.
 
 | Prueba | Resultado |
 |---|---|
-| `node --check` de los 9 módulos | OK |
+| `node --check` de todos los módulos | OK |
 | Carga y recarga sin errores de consola | `ERRORS []`, `LOGS []` |
 | Selección de titular | 1 ID seleccionado, 8 manejadores |
 | Arrastre | `x: 72 → 236`, `y: 186 → 314`; Undo restaura 72/186 |
@@ -283,6 +304,14 @@ Entorno: Chrome 154.0.8037.98, macOS, servidor local `node server.mjs`.
 | Descarga real | `~/Downloads/Cartel-editorial.png`, 655 111 bytes, 2160×2160 |
 | Texto en el sitio | `textarea` con el contenido, edición y undo |
 | Presentación | entra/sale con Esc y botón |
+| Quitar fondo | 56 % de píxeles transparentes; apply + undo |
+| Borrador mágico | máscara 24 135 px; relleno 607 194 bytes + undo |
+| Recorte | encuadre 80 % aplicado; 440 106 bytes + undo |
+| PDF export | 211 617 bytes, 1 página, Quick Look renderiza |
+| PDF import | página 1 de 1, imagen 810 594 bytes, doc 810×810 |
+| Collage | 4 ranuras; 2 fotos reemplazadas en lote |
+| Plantillas | 13 cartas, categorías Todos/Marketing/Redes/Documentos |
+| Build Vercel | `npm run build` → `dist` 2,8 MB; 200 en `index.html` y worker |
 
 Capturas finales:
 
@@ -298,7 +327,12 @@ Capturas de pruebas intermedias en [`docs/evidence/`](evidence/README.md).
 
 ## 8. Límites conocidos
 
-- **Un solo artboard.** No hay varias páginas como en Canva; sí hay presets y cambio de tamaño.
+- **Un solo artboard.** No hay varias páginas ni folletos multipágina; sí hay presets y cambio
+  de tamaño. La importación de PDF toma solo la primera página.
+- **Quitar fondo y borrador mágico no son IA generativa.** Usan color/flood fill y difusión local;
+  funcionan mejor con fondos uniformes y objetos pequeños sobre superficies continuas.
+- **PDF:** la importación convierte la página en imagen, no en elementos nativos editables.
+- **Correo:** no se exporta HTML para clientes de correo; se exporta PNG/PDF.
 - **Sin colaboración ni nube.** Todo vive en `localStorage` y archivos JSON locales.
 - **Sin edición vectorial de nodos.** Las formas son primitivas; no se editan sus vértices.
 - **Sin recorte interactivo de imágenes.** Hay `cover`/`contain`, volteo y redondeo, pero no una
@@ -317,8 +351,44 @@ Capturas de pruebas intermedias en [`docs/evidence/`](evidence/README.md).
 1. Varias páginas con miniaturas y reordenamiento.
 2. Recorte de imagen con máscara y zoom/pan interno.
 3. Grupos y selección anidada.
-4. Exportación SVG/PDF además de PNG.
+4. Exportación SVG y HTML de correo además de PNG/PDF.
 5. Fuentes subidas por el usuario con `FontFace`.
 6. Colaboración local vía `BroadcastChannel`.
 7. Historial con etiquetas y panel de versiones.
 8. Pruebas E2E con Playwright además de la API `window.__lienzo`.
+
+## 10. Despliegue estático
+
+El repositorio incluye un build determinista para Vercel:
+
+```bash
+npm run build   # genera dist/
+node server.mjs dist
+```
+
+`build.mjs` copia `index.html`, `styles.css` y `js/` (incluido `js/vendor/pdfjs/`) a `dist/`.
+`vercel.json` define:
+
+```json
+{
+  "buildCommand": "npm run build",
+  "installCommand": "echo \"Lienzo: sin dependencias\"",
+  "outputDirectory": "dist",
+  "cleanUrls": true
+}
+```
+
+En Vercel, el proyecto debe usar:
+
+- Framework Preset: **Other**
+- Root Directory: `./`
+- Build Command: **`npm run build`**
+- Output Directory: **`dist`**
+- Install Command: `echo "Sin dependencias"`
+
+Si el proyecto conserva overrides antiguos (por ejemplo, Output Directory `.` o `public`), hay
+que actualizarlos y hacer **Redeploy**. El build `dist` evita depender de la detección automática
+de Vercel y reduce el despliegue a unos 2,8 MB.
+
+El paquete `dist` no incluye `docs/`, `server.mjs` ni los lanzadores de macOS: solo la aplicación
+necesaria para el navegador. La documentación y las evidencias quedan en GitHub.

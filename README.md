@@ -102,6 +102,27 @@ Si ya se guardó una credencial incorrecta, borrala con:
 printf "protocol=https\nhost=github.com\n\n" | git credential-osxkeychain erase
 ```
 
+### Desplegar en Vercel
+
+El repo incluye `build.mjs` y `vercel.json`; el build genera una carpeta `dist` con solo la app
+estática. En Vercel:
+
+| Ajuste | Valor |
+|---|---|
+| Framework Preset | **Other** |
+| Root Directory | `./` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Install Command | `echo "Sin dependencias"` |
+
+Si la configuración del proyecto tiene overrides viejos, cambialos y pulsá **Save**; después
+**Deployments → ⋯ → Redeploy**. El build local se puede probar con:
+
+```bash
+npm run build
+node server.mjs dist
+```
+
 ## Funciones
 
 - **Selección:** clic, ⇧ clic, marquesina y teclado; objetos bloqueados y ocultos.
@@ -115,10 +136,16 @@ printf "protocol=https\nhost=github.com\n\n" | git credential-osxkeychain erase
 - **Color:** relleno, trazo, texto y fondo; selector nativo, hexadecimal y paletas.
 - **Texto en el sitio:** doble clic, edición directa, ajuste automático de altura.
 - **Imágenes propias:** subida y arrastre, reemplazo, cover/contain, volteo, redondeo.
+- **Herramientas de imagen:** quitar fondo con detección por bordes y PNG transparente,
+  borrador mágico por difusión, recorte y captura de ventana/pantalla.
+- **PDF y documentos:** importar la primera página de un PDF como imagen editable, exportar el
+  diseño actual a PDF, plantillas de documento, currículum, folleto y correo.
+- **Collage de fotos:** cuadrículas de 2, 4 y 9 fotos con ranuras que se rellenan en lote.
+- **13 plantillas:** Instagram, historia, flyer, logo, collage, folleto, currículum, tarjeta,
+  correo, documento, editorial, minimal y manifiesto.
 - **Historial:** 80 estados, undo/redo con agrupación de gestos.
 - **Exportación PNG:** 1×/2×/3×, fondo transparente, vista previa y nombre de archivo.
-- **Proyecto:** autoguardado, JSON de ida y vuelta, 4 plantillas originales, cambio de tamaño de
-  página, modo presentación.
+- **Proyecto:** autoguardado, JSON de ida y vuelta, cambio de tamaño de página, modo presentación.
 
 ## Capturas
 
@@ -126,8 +153,10 @@ printf "protocol=https\nhost=github.com\n\n" | git credential-osxkeychain erase
 |---|---|
 | ![Selección](docs/lienzo-selection.png) | ![Posición](docs/lienzo-position.png) |
 | Selección con 8 manejadores y barra contextual. | Medidas, alineación y orden de capas. |
-| ![Capas](docs/lienzo-layers.png) | ![Exportación](docs/lienzo-export.png) |
-| Capas, visibilidad y bloqueo. | Exportación PNG con calidad y transparencia. |
+| ![Capas](docs/lienzo-layers.png) | ![Herramientas](docs/lienzo-tools.png) |
+| Capas, visibilidad y bloqueo. | Quitar fondo, borrador mágico, PDF y collage. |
+| ![Quitar fondo](docs/lienzo-bg-remove.png) | ![Collage](docs/lienzo-collage.png) |
+| Vista previa de fondo detectado y PNG transparente. | Cuadrícula de collage con fotos para reemplazar. |
 
 ## Documentación
 
@@ -150,27 +179,42 @@ js/
   interactions.js selección, move, resize, rotate, texto inline
   snapping.js     guías y ajuste magnético
   ui.js           paneles e inspector
-  templates.js    cuatro plantillas originales
+  tools-ui.js     quitar fondo, borrador, recorte y captura
+  image-tools.js  algoritmos de imagen (fondo, inpainting, crop)
+  pdf-tools.js    importación PDF.js y exportación PDF propia
+  collage.js      cuadrículas de fotos y ranuras
+  templates.js    13 plantillas originales por categoría
   util.js         utilidades, fuentes, paletas
+  vendor/pdfjs/   PDF.js 4.10.38 (Apache 2.0)
+build.mjs         build estático para Vercel
+vercel.json       configuración de despliegue
 docs/             investigación, implementación, guía y evidencias
 ```
 
 ## Verificación
 
-- `node --check` sobre los 9 módulos: OK.
-- Chrome 154, carga y recarga sin errores de consola.
+- `node --check` sobre todos los módulos: OK.
+- Chrome 155, carga y recarga sin errores de consola.
 - Arrastre, resize (660×336 → 495×253), rotación (−31°) y undo verificados.
 - Multiselección y alineación verificadas.
 - Subida de un SVG 400×300 como recurso propio verificada.
+- Quitar fondo: 56 % de píxeles transparentes y PNG aplicado con undo.
+- Borrador mágico: máscara de 24 135 px, relleno difuso aplicado y undo.
+- Recorte: encuadre 80 % aplicado; PDF exportado (1 página, Quick Look válido) e importado.
+- Collage 2×2: 4 ranuras y reemplazo en lote.
 - Exportación PNG 2160×2160 (655 111 bytes) y transparencia (alfa 0) verificadas.
+- `npm run build` genera `dist` de 2,8 MB; servidor estático de `dist` responde 200.
 
 Detalle completo en [IMPLEMENTACION.md](docs/IMPLEMENTACION.md#7-verificación-realizada).
 
 ## Alcance y límites
 
 Este es un **clon funcional**, no una copia del producto ni de sus activos. No incluye nube,
-colaboración, IA, edición de nodos vectoriales, recorte interactivo ni múltiples páginas. La
-investigación se hizo sobre la interfaz pública en modo invitado y está documentada con sus
-límites en [INVESTIGACION-REA.md](docs/INVESTIGACION-REA.md#5-límites-de-la-observación).
+colaboración, IA generativa, edición de nodos vectoriales, varias páginas ni exportación de email
+HTML. Quitar fondo y borrador mágico son **algoritmos locales** (detección por bordes y relleno
+por difusión), no modelos de IA equivalentes a Canva. La importación de PDF toma la **primera
+página** y la convierte en imagen editable; el resto queda fuera de esta versión. La investigación
+se hizo sobre la interfaz pública en modo invitado y está documentada con sus límites en
+[INVESTIGACION-REA.md](docs/INVESTIGACION-REA.md#5-límites-de-la-observación).
 
 Canva es una marca de Canva Pty Ltd. Lienzo no está afiliado a Canva.

@@ -37,6 +37,9 @@ y [`../lienzo-png.png`](../lienzo-png.png).
 | `canva-file-menu.png` | Menú File: Create new design, Settings, Accessibility, Save, Download, Print, etc. | DOM del editor |
 | `canva-download-panel.png` | Diálogo Download: tipo de archivo, presets Digital/Print, páginas All/This page/Custom y Advanced Settings. | DOM del editor |
 | `canva-file-types.png` | Selector de formatos: PDF, PPTX, MP4, JPG, PNG, SVG (Pro), GIF. | DOM del editor |
+| `canva-background-remover.png` | Herramienta pública “Background Remover”: una herramienta, casos People/Products/Animals/Objects/Logos, PNG transparente, Erase/Restore. | `ev_baa8bbbc...`, `ev_6d369e35...` |
+| `canva-magic-eraser.png` | Herramienta pública “Magic Eraser”: cepillo sobre distracciones y edición dentro del photo editor. | `ev_216df37c...`, `ev_5d6a9735...` |
+| `canva-pdf-editor.png` | Editor público de PDF: subir PDF, convertirlo en elementos editables y exportar PDF/JPG/PNG/PPT. | `ev_d5bf4070...`, `ev_d272ccc8...` |
 
 ## Lienzo — capturas de verificación
 
@@ -50,3 +53,8 @@ y [`../lienzo-png.png`](../lienzo-png.png).
 | `clone-multiselect.png` | Dos objetos seleccionados y alineados; caja envolvente común. |
 | `clone-resize-dialog.png` | Diálogo de redimensionado con presets y escalado de contenido. |
 | `clone-present.png` | Modo presentación a pantalla completa con salida por Esc. |
+| `../lienzo-tools.png` | Panel Herramientas: quitar fondo, borrador mágico, recorte, captura, PDF y collage. |
+| `../lienzo-bg-remove.png` | Diálogo de quitar fondo con vista previa, tolerancia, suavizado y color detectado. |
+| `../lienzo-magic-eraser.png` | Borrador mágico con máscara roja pintada sobre la imagen. |
+| `../lienzo-pdf-import.png` | PDF importado como página editable. |
+| `../lienzo-collage.png` | Plantilla de collage con cuatro fotos y ranuras para rellenar. |

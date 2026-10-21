@@ -45,6 +45,8 @@ export const IMAGE_DEFAULTS = {
   flipX: false,
   flipY: false,
   radius: 0,
+  isPlaceholder: false,
+  collageSlot: null,
 };
 
 export function makeElement(type, patch = {}) {
@@ -388,6 +390,8 @@ export function imageElementFromFile({ src, naturalWidth, naturalHeight, doc, na
     naturalHeight,
     radius: 0,
     fit: 'cover',
+    isPlaceholder: false,
+    collageSlot: null,
   });
 }
 
@@ -439,6 +443,8 @@ export function normalizeDoc(input) {
       el.fit = raw.fit === 'contain' ? 'contain' : 'cover';
       el.flipX = Boolean(raw.flipX);
       el.flipY = Boolean(raw.flipY);
+      el.isPlaceholder = Boolean(raw.isPlaceholder);
+      el.collageSlot = Number.isFinite(Number(raw.collageSlot)) ? Number(raw.collageSlot) : null;
     }
     if (!el.name) el.name = elementLabel(el);
     normalized.push(el);

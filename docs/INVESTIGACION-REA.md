@@ -8,7 +8,7 @@ Se observó la aplicación pública de Canva en una sesión de Chrome controlada
 - **Punto de entrada:** `https://www.canva.com/`.
 - **Recorrido real:** portada pública → página de plantillas → plantilla pública → editor de plantilla en modo invitado (`/design/play?...`).
 - **Herramientas REA usadas:** `list_browser_targets`, `inspect_web_page`, `capture_web_screenshot`, `analyze_web_bundle`.
-- **Navegador:** Google Chrome 154.0.8037.98, macOS, sesión normal (no headless).
+- **Navegador:** Google Chrome 154/155 en macOS, sesión normal (no headless). La primera fase se hizo con 154 y la ampliación con 155.
 - **REA:** `rea-agents` 6.7.0, proveedor CDP `rea-cdp-browser` 2.
 
 La portada se cargó inicialmente en modo headless y quedó detenida en el desafío de Cloudflare
@@ -34,6 +34,12 @@ resolvió y la observación continuó sobre la página pública.
 | `ev_3a029bad0925ba8799460a472204a151f1d88e3b3d56f69271b254587d01e190` | `capture_web_screenshot` | Editor de plantilla en modo invitado, ya sin el modal. |
 | `ev_6af7f407934f27d48916dd688e7e77c20ba09e4f165111a5c59f7a87b610f0a2` | `capture_web_screenshot` | Panel de capas del editor. |
 | `ev_ebb565d2fea811a5e5a04f45070e2fabf8464ef38af534748b5040560d7b2959` | `inspect_web_page` | DOM final del editor con panel de capas y selección. |
+| `ev_6d369e3529258bc04d419dd785d257f4d082e9edc6b9076dc248e18ca6330254` | `inspect_web_page` | Herramienta pública Background Remover. |
+| `ev_baa8bbbc3c9136b98bd6c06a967421f4fcb8b57a4da89f449411c88b53d6e404` | `capture_web_screenshot` | Página de Background Remover. |
+| `ev_5d6a9735800b8d5eef080247c5e910a007c137b3f7f4f7a104a81e172bcf6246` | `inspect_web_page` | Herramienta pública Magic Eraser. |
+| `ev_216df37c57491d6dd16ac72c6c3528f73e8601d3bc44f137e13224d232da32ea` | `capture_web_screenshot` | Página de Magic Eraser. |
+| `ev_d272ccc820ff10bbff329554febf1fb7d2edafa492124eb207620912acddec13` | `inspect_web_page` | Editor público de PDF. |
+| `ev_d5bf4070322f251d56f8d7bf9a61abd5e3f80b79fc408744a1b6910fac40cde3` | `capture_web_screenshot` | Página del editor de PDF. |
 
 Las capturas correspondientes están en [`docs/evidence/`](evidence/README.md).
 
@@ -243,6 +249,70 @@ Dentro de **Download**:
 La opción PNG se describe como **“Best for complex images, illustrations”**. La exportación real
 no se ejecutó porque la cuenta no estaba autenticada.
 
+### 3.12 Quitar fondo
+
+La página pública **Background Remover** ofrece una herramienta sin registro visible:
+
+- Subida o arrastre de una imagen.
+- Categorías de ejemplo: **People, Products, Animals, Objects, Logos**.
+- Eliminación en un clic, con opción de refinar con **Erase** y **Restore**.
+- Resultado descargable como **PNG transparente**.
+- La descripción promete conservar detalles finos como pelo, pelaje o joyas.
+- También se puede seguir editando en Canva para cambiar el fondo, añadir texto o gráficos.
+
+Lienzo implementa una versión local: detecta el color dominante de los bordes, hace un flood fill
+con tolerancia, suaviza el alfa y exporta PNG transparente. No es un modelo de segmentación
+semántica; funciona mejor con fondos uniformes.
+
+### 3.13 Borrador mágico
+
+La página pública **Magic Eraser** describe:
+
+- Subir una imagen o arrastrarla.
+- “Brush over distractions” para borrar objetos o personas.
+- Uso dentro del photo editor de Canva.
+- Casos: fotos de viaje, productos, publicaciones de Instagram.
+- Comparativa antes/después y resultado inmediato.
+
+Lienzo implementa un **borrador por difusión**: el usuario pinta una máscara y el relleno se
+calcula promediando los píxeles del entorno. Es una aproximación local, no el modelo generativo
+de Canva.
+
+### 3.14 Edición de PDF
+
+El **PDF Editor** público de Canva ofrece:
+
+- Subir un PDF.
+- Convertirlo en elementos editables dentro de Canva.
+- Herramientas de PDF: convertir PPT↔PDF, JPG↔PDF, Word→PDF, PDF→JPG/PNG/PPT, eliminar páginas
+  y traducir.
+- Exportar de nuevo a PDF, JPG, PNG, PPT o archivos listos para impresión.
+
+Lienzo implementa:
+- **Importar PDF**: renderiza la primera página con PDF.js y la agrega como imagen editable.
+- **Exportar PDF**: genera un PDF 1.4 propio con la composición actual (sin dependencias).
+- Plantillas de documento, currículum, folleto y correo.
+
+La diferencia principal es que Lienzo no descompone el PDF en elementos nativos editables: lo usa
+como imagen base sobre la que se puede dibujar y escribir.
+
+### 3.15 Correo y familia de plantillas
+
+La página pública de **Email design** promete diseñar correos visuales para bandejas de entrada.
+Las páginas públicas de Instagram, historias, flyers, logos, collage, folletos, currículums y
+tarjetas confirman la existencia de plantillas y presets por tipo de formato. Lienzo crea su
+propio catálogo original de **13 plantillas** con categorías Redes, Marketing y Documentos, y
+presets de página para Instagram, historia, flyer, logo, collage, tarjeta, folleto, correo,
+currículum, documento, presentación y A4.
+
+### 3.16 Captura mágica
+
+La URL pública `https://www.canva.com/features/magic-capture/` devuelve **404** en la sesión
+observada. Por eso no se documenta aquí una UI concreta de Canva para esa función. Lienzo
+implementa una **captura de pantalla del navegador** con `getDisplayMedia`: el usuario elige una
+ventana o pestaña, se captura un frame y se agrega como imagen editable. Es una interpretación
+funcional del nombre, no una copia de una pantalla de Canva observada.
+
 ## 4. Modelo de interacción inferido
 
 A partir de la evidencia anterior, el editor se comporta como un editor de objetos con:
@@ -273,6 +343,13 @@ Estas conclusiones guiaron la implementación de Lienzo.
 - **Multi-selección:** no se estableció de forma fiable el gesto de selección múltiple en la
   sesión observada. La implementación de Lienzo soporta ⇧ clic y marquesina como decisión de
   diseño, no como copia de un gesto verificado.
+- **Quitar fondo y borrador mágico:** Canva usa modelos de IA; Lienzo usa algoritmos locales de
+  color/difusión. La UI y el resultado se inspiran en lo observado, pero no son equivalentes.
+- **PDF:** Lienzo importa solo la primera página como imagen; Canva descompone el documento en
+  elementos editables y soporta conversiones adicionales.
+- **Correo:** Lienzo exporta PNG/PDF; no genera HTML para clientes de correo.
+- **Captura mágica:** la página pública devolvió 404; la implementación es una captura de
+  pantalla del navegador, no una reproducción de una UI observada.
 - **Páginas:** Canva mostró 11 páginas y controles de página. Lienzo implementa un solo
   artboard con capas; el cambio de tamaño de página sí está implementado.
 - **Sin reutilización de activos:** no se copiaron fuentes, imágenes, iconos ni código de Canva.
@@ -287,4 +364,6 @@ precisión numérica; Undo revierte esas transformaciones. La exportación se of
 composición final en varios formatos, con PNG para imágenes complejas.
 
 Lienzo reproduce ese modelo con una implementación propia sobre Canvas 2D, sin dependencias
-externas y sin código de Canva.
+externas y sin código de Canva. La ampliación añade herramientas locales de imagen, PDF y un
+catálogo de 13 plantillas; las diferencias con los modelos de IA y con la edición multipágina de
+Canva quedan explícitas en los límites.

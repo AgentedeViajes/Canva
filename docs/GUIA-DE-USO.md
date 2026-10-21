@@ -43,6 +43,73 @@ Abre <http://127.0.0.1:4173>. La aplicación funciona sin conexión y guarda el 
 - Desde el inspector puedes reemplazarla, cambiar entre Rellenar/Contener, voltearla y
   redondear sus esquinas.
 
+## Herramientas de imagen y documentos
+
+Pulsá **Herramientas** en el rail izquierdo. Las acciones de imagen se habilitan cuando hay una
+imagen seleccionada.
+
+### Quitar fondo
+
+1. Seleccioná una imagen.
+2. **Herramientas → Quitar fondo**.
+3. Ajustá **Tolerancia** y **Suavizado de borde**.
+4. Probá los modos **Fondo conectado a los bordes** o **Todo el color de fondo**.
+5. Pulsá **Aplicar**. Se genera un PNG transparente.
+6. Podés deshacer con **⌘ Z**.
+
+Funciona mejor con fondos uniformes; no es un modelo de IA.
+
+### Borrador mágico
+
+1. Seleccioná una imagen.
+2. **Herramientas → Borrador mágico**.
+3. Ajustá el tamaño del pincel.
+4. Pintá sobre el objeto o distracción.
+5. Pulsá **Aplicar**; la zona se rellena con los píxeles del entorno.
+6. **Borrar máscara** limpia lo pintado.
+
+### Recortar
+
+1. Seleccioná una imagen.
+2. **Herramientas → Recortar**.
+3. Arrastrá el recuadro para moverlo.
+4. **Aplicar recorte**.
+
+### Captura mágica
+
+1. **Herramientas → Captura mágica**.
+2. **Elegir ventana** y autorizá el permiso del navegador.
+3. Cuando aparezca la vista previa, **Añadir al lienzo**.
+
+Requiere que la app se sirva por `http://localhost` o HTTPS.
+
+## Collage de fotos
+
+1. **Herramientas → Collage**.
+2. Elegí 2, 4 o 9 fotos.
+3. Se crea una cuadrícula con ranuras.
+4. Pulsá **Rellenar collage con fotos** y seleccioná varias imágenes.
+5. También podés seleccionar una ranura y usar **Rellenar esta foto** desde el inspector.
+
+## PDF y documentos
+
+- **Importar PDF:** **Archivo → Importar PDF…** o **Herramientas → Importar PDF**. Se convierte
+  la **primera página** en una imagen editable sobre la que podés escribir y dibujar.
+- **Exportar PDF:** **Archivo → Exportar PDF…** o **Herramientas → Exportar PDF**. Genera un PDF
+  con el diseño actual.
+- **Plantillas de documento:** Documento, Currículum, Folleto y Correo.
+- **Exportar PNG:** para correos, la exportación es como imagen PNG o PDF; no se genera HTML para
+  clientes de correo.
+
+## Plantillas por categoría
+
+En **Plantillas** podés filtrar por **Todos, Marketing, Redes y Documentos**:
+
+- Instagram, Historia, Flyer, Logo, Collage, Folleto, Currículum, Tarjeta, Correo, Documento,
+  Editorial, Minimal y Manifiesto.
+
+Cada plantilla se puede editar y deshacer como cualquier diseño.
+
 ## Seleccionar, mover y transformar
 
 | Acción | Cómo |

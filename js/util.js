@@ -106,12 +106,20 @@ export const FILL_SWATCHES = [
 ];
 
 export const PAGE_PRESETS = [
-  { id: 'square', name: 'Publicación', width: 1080, height: 1080, ratio: 'square' },
-  { id: 'presentation', name: 'Presentación', width: 1920, height: 1080, ratio: 'landscape' },
-  { id: 'story', name: 'Historia', width: 1080, height: 1920, ratio: 'story' },
-  { id: 'portrait', name: 'Retrato', width: 1080, height: 1350, ratio: 'portrait' },
-  { id: 'banner', name: 'Portada', width: 1200, height: 628, ratio: 'landscape' },
-  { id: 'a4', name: 'A4', width: 2480, height: 3508, ratio: 'portrait' },
+  { id: 'square', name: 'Instagram', width: 1080, height: 1080, ratio: 'square', category: 'Redes' },
+  { id: 'story', name: 'Historia', width: 1080, height: 1920, ratio: 'story', category: 'Redes' },
+  { id: 'portrait', name: 'Retrato', width: 1080, height: 1350, ratio: 'portrait', category: 'Redes' },
+  { id: 'banner', name: 'Portada', width: 1200, height: 628, ratio: 'landscape', category: 'Redes' },
+  { id: 'flyer', name: 'Flyer', width: 1240, height: 1754, ratio: 'portrait', category: 'Marketing' },
+  { id: 'logo', name: 'Logo', width: 500, height: 500, ratio: 'square', category: 'Marketing' },
+  { id: 'collage', name: 'Collage', width: 1080, height: 1080, ratio: 'square', category: 'Marketing' },
+  { id: 'business-card', name: 'Tarjeta', width: 1050, height: 600, ratio: 'landscape', category: 'Marketing' },
+  { id: 'brochure', name: 'Folleto', width: 2480, height: 1754, ratio: 'landscape', category: 'Marketing' },
+  { id: 'email', name: 'Correo', width: 1200, height: 1600, ratio: 'portrait', category: 'Marketing' },
+  { id: 'resume', name: 'Currículum', width: 1240, height: 1754, ratio: 'portrait', category: 'Documentos' },
+  { id: 'document', name: 'Documento', width: 1240, height: 1754, ratio: 'portrait', category: 'Documentos' },
+  { id: 'presentation', name: 'Presentación', width: 1920, height: 1080, ratio: 'landscape', category: 'Documentos' },
+  { id: 'a4', name: 'A4', width: 2480, height: 3508, ratio: 'portrait', category: 'Documentos' },
 ];
 
 export function loadImage(src) {
