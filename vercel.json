@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "echo \"Lienzo: sitio estático, sin build\"",
+  "installCommand": "echo \"Lienzo: sin dependencias\"",
+  "outputDirectory": ".",
+  "cleanUrls": true
+}
